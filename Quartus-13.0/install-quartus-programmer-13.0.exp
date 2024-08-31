@@ -1,0 +1,28 @@
+#!/usr/bin/env expect
+
+if { $::argc != 1 } {
+    puts "Error: no install path passed"
+    exit 1
+}
+
+set ::env(DISPLAY) ""
+
+set installpath [lindex $::argv 0]
+
+set yesno "\\\[\[Yy\]/\[Nn\]\\\]"
+set q2we "Quartus II Programmer and SignalTap II"
+
+proc handle_quartus_setup {} {
+    while 1 {
+        expect {
+            eof { break }
+            -re "You already had $::q2we .* installed in this directory, .*, do you want to update that installation\\\? $::yesno:" { puts ""; exit 1 }
+            -re "Press \\\[Enter\\\] to continue *:" { send "\r" }
+            -re "Do you accept this license\\\? $::yesno:" { send "y\r" }
+            -re "Installation \[Dd\]irectory \\\[.*\\\]:" { send "\r" }
+        }
+    }
+}
+
+spawn ./QuartusProgrammerSetup-13.0.1.232.run --mode text --installdir $installpath
+handle_quartus_setup

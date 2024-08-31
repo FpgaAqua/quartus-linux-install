@@ -1,0 +1,37 @@
+#!/usr/bin/env expect
+
+if { $::argc != 1 } {
+    puts "Error: no install path passed"
+    exit 1
+}
+
+set ::env(DISPLAY) ""
+
+set installpath [lindex $::argv 0]
+
+set yesno "\\\[\[Yy\]/\[Nn\]\\\]"
+set q2we "Quartus Prime Programmer and Tools"
+
+proc handle_quartus_setup {} {
+    while 1 {
+        expect {
+            eof { break }
+            -re "You already had Quartus .* installed in this directory, .*, do you want to update that installation\\\? $::yesno:" { puts ""; exit 1 }
+            -re "Warning: You don't have enough disk space in .* to install this " {
+                expect {
+                    -re "Press \\\[Enter\\\] to continue *:" {
+                        puts ""
+                        exit 1
+                    }
+                }
+            }
+            -re "Press \\\[Enter\\\] to continue *:" { send "\r" }
+            -re "Do you accept this license\\\? $::yesno:" { send "y\r" }
+            -re "Installation \[Dd\]irectory \\\[.*\\\]:" { send "\r" }
+            -re "Launch .* $::yesno:" { send "n\r" }
+        }
+    }
+}
+
+spawn ./QuartusProgrammerSetup-17.0.0.595-linux.run --mode text --installdir $installpath
+handle_quartus_setup
